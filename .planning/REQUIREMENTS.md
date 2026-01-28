@@ -1,0 +1,74 @@
+# Requirements: @technetcentral/gmail-mcp-server
+
+**Defined:** 2026-01-27
+**Core Value:** OAuth2 tokens refresh automatically and transparently
+
+## v1 Requirements
+
+### Package Configuration
+
+- [ ] **PKG-01**: Package name is `@technetcentral/gmail-mcp-server`
+- [ ] **PKG-02**: Repository URL points to `https://github.com/technetcentral/gmail-mcp-server`
+- [ ] **PKG-03**: Binary name in `bin` field is `gmail-mcp-server`
+
+### Dependencies
+
+- [ ] **DEP-01**: `open` package installed for browser auto-launch during auth
+
+### Build
+
+- [ ] **BLD-01**: TypeScript compiles without errors via `npm run build`
+- [ ] **BLD-02**: `dist/` directory contains compiled `.js` files
+
+### Version Control
+
+- [ ] **GIT-01**: Git repository initialized (DONE)
+- [ ] **GIT-02**: `.gitignore` excludes node_modules/, dist/, *.log, .env
+- [ ] **GIT-03**: All source files committed
+
+### MCP Client Configuration
+
+- [ ] **MCP-01**: Gmail MCP server configured in `/Users/alvin/dev/n8n_builder/.mcp.json`
+- [ ] **MCP-02**: Two accounts configured: `gmail-lhc` and `gmail-personal`
+- [ ] **MCP-03**: Uses existing credential paths at `~/.gmail-mcp/lhc/` and `~/.gmail-mcp/personal/`
+
+### Verification
+
+- [ ] **VER-01**: Gmail tools available after OpenCode restart
+- [ ] **VER-02**: `list_messages` returns recent emails without auth errors
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| GitHub repo creation | Future work after local verification |
+| npm publishing | Future work after GitHub push |
+| Attachment downloads | Future feature |
+| Thread/conversation tools | Future feature |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| PKG-01 | Phase 1 | Pending |
+| PKG-02 | Phase 1 | Pending |
+| PKG-03 | Phase 1 | Pending |
+| DEP-01 | Phase 1 | Pending |
+| BLD-01 | Phase 1 | Pending |
+| BLD-02 | Phase 1 | Pending |
+| GIT-01 | Phase 1 | Complete |
+| GIT-02 | Phase 1 | Pending |
+| GIT-03 | Phase 1 | Pending |
+| MCP-01 | Phase 1 | Pending |
+| MCP-02 | Phase 1 | Pending |
+| MCP-03 | Phase 1 | Pending |
+| VER-01 | Phase 1 | Pending |
+| VER-02 | Phase 1 | Pending |
+
+**Coverage:**
+- v1 requirements: 14 total
+- Mapped to phases: 14
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-01-27*
