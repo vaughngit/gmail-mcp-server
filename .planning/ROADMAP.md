@@ -72,6 +72,11 @@
 
 **Requirements:** VER-01, VER-02
 
+**Plans:** 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — Diagnose server loading, verify with user, fix issues
+
 **Success Criteria:**
 1. Gmail tools appear in MCP client after restart
 2. `list_messages` returns recent emails without auth errors
