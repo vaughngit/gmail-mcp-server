@@ -5,34 +5,88 @@
 
 ## Overview
 
-| Phase | Name | Goal | Requirements |
-|-------|------|------|--------------|
-| 1 | Finalize & Deploy | Package configured, built, and MCP client ready | PKG-01, PKG-02, PKG-03, DEP-01, BLD-01, BLD-02, GIT-02, GIT-03, MCP-01, MCP-02, MCP-03, VER-01, VER-02 |
+| Phase | Name | Goal | Status |
+|-------|------|------|--------|
+| 1 | Package Configuration | Update package.json metadata | ✓ Complete |
+| 2 | Dependencies | Add open package for browser auto-launch | ✓ Complete |
+| 3 | Build | Compile TypeScript to JavaScript | ✓ Complete |
+| 4 | Git Setup | Initialize repo with proper .gitignore | ✓ Complete |
+| 5 | MCP Client Config | Configure Gmail servers in n8n_builder | ✓ Complete |
+| 6 | Debug & Verify | Fix token refresh issues, verify working | In Progress |
 
-## Phase 1: Finalize & Deploy
+---
 
-**Goal:** Complete all remaining setup tasks to make the Gmail MCP server deployment-ready
+## Phase 1: Package Configuration ✓
 
-**Requirements:** PKG-01, PKG-02, PKG-03, DEP-01, BLD-01, BLD-02, GIT-02, GIT-03, MCP-01, MCP-02, MCP-03, VER-01, VER-02
+**Goal:** Update package.json with correct metadata for npm publishing
+
+**Requirements:** PKG-01, PKG-02, PKG-03
+
+**Status:** Complete
+
+---
+
+## Phase 2: Dependencies ✓
+
+**Goal:** Add open package for browser auto-launch during auth
+
+**Requirements:** DEP-01
+
+**Status:** Complete
+
+---
+
+## Phase 3: Build ✓
+
+**Goal:** Compile TypeScript without errors
+
+**Requirements:** BLD-01, BLD-02
+
+**Status:** Complete
+
+---
+
+## Phase 4: Git Setup ✓
+
+**Goal:** Initialize git repo with proper configuration
+
+**Requirements:** GIT-01, GIT-02, GIT-03
+
+**Status:** Complete
+
+---
+
+## Phase 5: MCP Client Config ✓
+
+**Goal:** Configure Gmail MCP servers in n8n_builder workspace
+
+**Requirements:** MCP-01, MCP-02, MCP-03
+
+**Status:** Complete
+
+---
+
+## Phase 6: Debug & Verify
+
+**Goal:** Debug why Gmail MCP server isn't working, verify token refresh
+
+**Requirements:** VER-01, VER-02
 
 **Success Criteria:**
-1. `package.json` has correct name (`@technetcentral/gmail-mcp-server`), repo URL, and binary config
-2. `open` package is installed and auth flow can open browser automatically
-3. `npm run build` succeeds and `dist/` contains compiled JS files
-4. `.gitignore` properly configured and all source files committed
-5. `.mcp.json` in n8n_builder workspace configures both Gmail accounts
-6. After MCP client restart, Gmail tools work and list_messages returns data
+1. Gmail tools appear in MCP client after restart
+2. `list_messages` returns recent emails without auth errors
+3. Token refresh works transparently when token is expired
 
-**Status:** Not Started
+**Status:** In Progress
 
 ---
 
 ## Milestone Summary
 
 **v1.0 — Deployment Ready**
-- 1 phase
-- 13 requirements (1 already complete: GIT-01)
-- Focus: Get from "code exists" to "working deployment"
+- 6 phases
+- Phases 1-5: Complete
+- Phase 6: In Progress (debugging)
 
 ---
-*Roadmap created: 2026-01-27*
+*Roadmap updated: 2026-01-27*
