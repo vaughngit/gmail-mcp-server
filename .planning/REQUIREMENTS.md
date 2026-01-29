@@ -37,6 +37,13 @@
 - [ ] **VER-01**: Gmail tools available after OpenCode restart
 - [ ] **VER-02**: `list_messages` returns recent emails without auth errors
 
+### Broader Search Suggestions
+
+- [ ] **BSS-01**: Query parser correctly parses Gmail search operators (from:, to:, subject:, after:, before:, has:, label:, is:)
+- [ ] **BSS-02**: Query parser correctly handles quoted strings (e.g., `from:"John Doe"`)
+- [ ] **BSS-03**: Suggestion generator returns broader queries when restrictive operators produce no results
+- [ ] **BSS-04**: Simple queries (no operators) do not generate suggestions
+
 ## Out of Scope
 
 | Feature | Reason |
@@ -62,12 +69,16 @@
 | MCP-01 | Phase 1 | Complete |
 | MCP-02 | Phase 1 | Complete |
 | MCP-03 | Phase 1 | Complete |
-| VER-01 | Phase 1 | Pending |
-| VER-02 | Phase 1 | Pending |
+| VER-01 | Phase 6 | Pending |
+| VER-02 | Phase 6 | Pending |
+| BSS-01 | Phase 7 | Pending |
+| BSS-02 | Phase 7 | Pending |
+| BSS-03 | Phase 7 | Pending |
+| BSS-04 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 14 total
-- Mapped to phases: 14
+- v1 requirements: 18 total
+- Mapped to phases: 18
 - Unmapped: 0 ✓
 
 ---

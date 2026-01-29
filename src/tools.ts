@@ -4,6 +4,39 @@ import { getGmailClient } from "./oauth.js";
 type Gmail = gmail_v1.Gmail;
 
 /**
+ * Parsed Gmail query components
+ */
+interface ParsedQuery {
+  from?: string[];
+  to?: string[];
+  subject?: string[];
+  body?: string[];
+  after?: string;
+  before?: string;
+  hasAttachment?: boolean;
+  label?: string[];
+  isUnread?: boolean;
+  raw: string;
+}
+
+/**
+ * A single search suggestion
+ */
+interface SearchSuggestion {
+  query: string;
+  reason: string;
+}
+
+/**
+ * Search suggestions for zero-result queries
+ */
+interface SearchSuggestions {
+  noResults: boolean;
+  broaderQueries: SearchSuggestion[];
+  prompt: string;
+}
+
+/**
  * Decodes base64url encoded content
  */
 function decodeBase64Url(data: string): string {
@@ -185,7 +218,188 @@ export async function readMessage(params: {
 }
 
 /**
+ * Parses a Gmail search query into structured components
+ * Handles operators: from:, to:, subject:, after:, before:, has:, label:, is:
+ * Supports quoted values: from:"John Doe"
+ */
+function parseGmailQuery(query: string): ParsedQuery {
+  const result: ParsedQuery = { raw: query };
+  
+  // Regex: captures operator name and either "quoted value" or unquoted-value
+  const operatorRegex = /(\w+):(?:"([^"]+)"|(\S+))/gi;
+  
+  let match: RegExpExecArray | null;
+  const matchedRanges: Array<[number, number]> = [];
+  
+  while ((match = operatorRegex.exec(query)) !== null) {
+    const operator = match[1].toLowerCase();
+    const value = match[2] || match[3]; // Quoted takes precedence
+    
+    if (!value) continue; // Skip empty values
+    
+    matchedRanges.push([match.index, match.index + match[0].length]);
+    
+    switch (operator) {
+      case 'from':
+        (result.from ??= []).push(value);
+        break;
+      case 'to':
+        (result.to ??= []).push(value);
+        break;
+      case 'subject':
+        (result.subject ??= []).push(value);
+        break;
+      case 'after':
+        result.after = value;
+        break;
+      case 'before':
+        result.before = value;
+        break;
+      case 'has':
+        if (value.toLowerCase() === 'attachment') {
+          result.hasAttachment = true;
+        }
+        break;
+      case 'label':
+        (result.label ??= []).push(value);
+        break;
+      case 'is':
+        if (value.toLowerCase() === 'unread') {
+          result.isUnread = true;
+        }
+        break;
+    }
+  }
+  
+  // Extract remaining text (body search terms)
+  matchedRanges.sort((a, b) => b[0] - a[0]);
+  let remaining = query;
+  for (const [start, end] of matchedRanges) {
+    remaining = remaining.slice(0, start) + remaining.slice(end);
+  }
+  remaining = remaining.trim();
+  
+  if (remaining) {
+    const bodyTerms: string[] = [];
+    const phraseRegex = /"([^"]+)"|(\S+)/g;
+    let bodyMatch: RegExpExecArray | null;
+    while ((bodyMatch = phraseRegex.exec(remaining)) !== null) {
+      bodyTerms.push(bodyMatch[1] || bodyMatch[2]);
+    }
+    if (bodyTerms.length > 0) {
+      result.body = bodyTerms;
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Generates broader search suggestions for a parsed query
+ * Returns null if query has no operators (already broad) or no suggestions possible
+ */
+function generateBroaderSuggestions(parsed: ParsedQuery): SearchSuggestions | null {
+  // BSS-04: Simple queries (no operators) do not generate suggestions
+  const hasOperators = !!(
+    parsed.from?.length ||
+    parsed.to?.length ||
+    parsed.subject?.length ||
+    parsed.after ||
+    parsed.before ||
+    parsed.hasAttachment ||
+    parsed.label?.length ||
+    parsed.isUnread
+  );
+  
+  if (!hasOperators) {
+    return null;
+  }
+  
+  const suggestions: SearchSuggestion[] = [];
+  
+  // Strategy 1: Extract words from field-specific operators and search all fields
+  const fieldOperators: Array<{ field: string[]; name: string }> = [
+    { field: parsed.from || [], name: 'sender' },
+    { field: parsed.to || [], name: 'recipient' },
+    { field: parsed.subject || [], name: 'subject' },
+  ];
+  
+  for (const { field, name } of fieldOperators) {
+    for (const value of field) {
+      const words = value.split(/\s+/).filter(w => w.length > 2);
+      for (const word of words) {
+        suggestions.push({
+          query: word,
+          reason: `Search all fields for "${word}" instead of just the ${name}`
+        });
+      }
+      // Multi-word values: also suggest full phrase
+      if (words.length > 1) {
+        suggestions.push({
+          query: `"${value}"`,
+          reason: `Search all fields for "${value}" as a phrase`
+        });
+      }
+    }
+  }
+  
+  // Strategy 2: Remove date restrictions
+  if (parsed.after || parsed.before) {
+    const parts: string[] = [];
+    if (parsed.from) parts.push(...parsed.from.map(v => `from:${v.includes(' ') ? `"${v}"` : v}`));
+    if (parsed.to) parts.push(...parsed.to.map(v => `to:${v.includes(' ') ? `"${v}"` : v}`));
+    if (parsed.subject) parts.push(...parsed.subject.map(v => `subject:${v.includes(' ') ? `"${v}"` : v}`));
+    if (parsed.body) parts.push(...parsed.body);
+    if (parsed.label) parts.push(...parsed.label.map(v => `label:${v}`));
+    
+    if (parts.length > 0) {
+      suggestions.push({
+        query: parts.join(' '),
+        reason: 'Remove date restrictions to search all time'
+      });
+    }
+  }
+  
+  // Strategy 3: Remove label restrictions
+  if (parsed.label?.length) {
+    const parts: string[] = [];
+    if (parsed.from) parts.push(...parsed.from.map(v => `from:${v.includes(' ') ? `"${v}"` : v}`));
+    if (parsed.to) parts.push(...parsed.to.map(v => `to:${v.includes(' ') ? `"${v}"` : v}`));
+    if (parsed.subject) parts.push(...parsed.subject.map(v => `subject:${v.includes(' ') ? `"${v}"` : v}`));
+    if (parsed.body) parts.push(...parsed.body);
+    if (parsed.after) parts.push(`after:${parsed.after}`);
+    if (parsed.before) parts.push(`before:${parsed.before}`);
+    
+    if (parts.length > 0) {
+      suggestions.push({
+        query: parts.join(' '),
+        reason: 'Search all labels instead of specific ones'
+      });
+    }
+  }
+  
+  if (suggestions.length === 0) {
+    return null;
+  }
+  
+  // Deduplicate and limit to 5 suggestions
+  const seen = new Set<string>();
+  const uniqueSuggestions = suggestions.filter(s => {
+    if (seen.has(s.query)) return false;
+    seen.add(s.query);
+    return true;
+  }).slice(0, 5);
+  
+  return {
+    noResults: true,
+    broaderQueries: uniqueSuggestions,
+    prompt: `No emails found matching "${parsed.raw}". Would you like me to try a broader search?`
+  };
+}
+
+/**
  * Search messages using Gmail query syntax
+ * Returns suggestions for broader queries if search returns zero results
  */
 export async function searchMessages(params: {
   query: string;
@@ -201,12 +415,46 @@ export async function searchMessages(params: {
     date: string;
   }>;
   nextPageToken?: string;
+  suggestions?: SearchSuggestions;
 }> {
-  return listMessages({
+  const result = await listMessages({
     q: params.query,
     maxResults: params.maxResults,
     pageToken: params.pageToken,
   });
+
+  // Only generate suggestions if no results
+  if (result.messages.length === 0) {
+    const parsed = parseGmailQuery(params.query);
+    const suggestions = generateBroaderSuggestions(parsed);
+    
+    if (suggestions) {
+      return {
+        messages: result.messages.map(m => ({
+          id: m.id,
+          threadId: m.threadId,
+          snippet: m.snippet,
+          from: m.from,
+          subject: m.subject,
+          date: m.date,
+        })),
+        nextPageToken: result.nextPageToken,
+        suggestions,
+      };
+    }
+  }
+
+  return {
+    messages: result.messages.map(m => ({
+      id: m.id,
+      threadId: m.threadId,
+      snippet: m.snippet,
+      from: m.from,
+      subject: m.subject,
+      date: m.date,
+    })),
+    nextPageToken: result.nextPageToken,
+  };
 }
 
 /**
