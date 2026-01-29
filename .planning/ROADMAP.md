@@ -13,6 +13,7 @@
 | 4 | Git Setup | Initialize repo with proper .gitignore | ✓ Complete |
 | 5 | MCP Client Config | Configure Gmail servers in n8n_builder | ✓ Complete |
 | 6 | Debug & Verify | Fix token refresh issues, verify working | In Progress |
+| 7 | Broader Search Suggestions | Suggest broader queries when search returns no results | Pending |
 
 ---
 
@@ -86,12 +87,36 @@ Plans:
 
 ---
 
+## Phase 7: Broader Search Suggestions
+
+**Goal:** When Gmail search returns zero results, suggest broader search queries
+
+**Requirements:** BSS-01, BSS-02, BSS-03, BSS-04
+
+**Feature Spec:** .planning/features/BROADER_SEARCH_SUGGESTIONS.md
+
+**Plans:** 1 plan
+
+Plans:
+- [ ] 07-01-PLAN.md — Add query parser, suggestion generator, integrate with searchMessages
+
+**Success Criteria:**
+1. Zero-result searches with restrictive operators return suggestions
+2. Suggestions include broader query and human-readable reason
+3. Simple queries (no operators) do not generate suggestions
+4. Query parser handles quoted strings and all common Gmail operators
+
+**Status:** Planned
+
+---
+
 ## Milestone Summary
 
 **v1.0 — Deployment Ready**
-- 6 phases
+- 7 phases
 - Phases 1-5: Complete
 - Phase 6: In Progress (debugging)
+- Phase 7: Pending (broader search suggestions)
 
 ---
-*Roadmap updated: 2026-01-27*
+*Roadmap updated: 2026-01-29*
